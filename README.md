@@ -1,0 +1,1 @@
+# RabbitMQ STOMP Circutor plugin
