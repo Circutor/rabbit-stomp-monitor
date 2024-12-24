@@ -8,12 +8,28 @@
 - Make (>= 4.0) (via `build-essential` on Debian-based systems or `brew install make` on macOS)
 
 ### Steps
+#### Building Locally
 1. Clone the repository.
 2. Run the following command in the project root directory:
     ```bash
     DIST_AS_EZS=yes make dist
     ```
 3. The plugin archive will be created in the `./plugins` directory with the name `rabbitmq_stomp_circutor-<version>.ez`.
+
+#### Building Using GitHub Actions Dockerfile
+1. Ensure Docker is installed and running on your machine.
+2. Run the following command in the project root directory:
+    ```bash
+    docker build \
+        -t build-plugin \
+        -f .github/actions/build-plugin/Dockerfile \
+        .github/actions/build-plugin/
+    ```
+3. Execute the build process using the Docker image:
+    ```bash
+    docker run --rm -v $(pwd):/github/workspace build-plugin
+    ```
+4. The plugin archive will be created in the `./plugins` directory with the name `rabbitmq_stomp_circutor-<version>.ez`.
 
 ## Deployment
 

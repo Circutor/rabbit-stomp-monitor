@@ -1,0 +1,21 @@
+name: Build RabbitMQ Plugin
+
+on:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Build archive
+      uses: ./.github/actions/build-plugin
+
+    - name: Archive build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: rabbitmq_stomp_circutor-v3.12.x.ez
+        path: ./plugins/rabbitmq_stomp_circutor-v3.12.x.ez
