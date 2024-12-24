@@ -76,7 +76,8 @@ connection_protocol(ChPid) ->
 maybe_log_message(Method, Content) ->
     maybe_log_message(get({?MODULE, connection_protocol}), Method, Content).
 
-maybe_log_message({'STOMP', _}, Method, Content) ->
+maybe_log_message({Protocol, _}, Method, Content) when Protocol == 'STOMP';
+                                                       Protocol == 'Web STOMP' ->
     log_message(Method, Content);
 maybe_log_message(undefined, Method, Content) ->
     Protocol = connection_protocol(self()),

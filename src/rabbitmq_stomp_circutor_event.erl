@@ -61,19 +61,32 @@ code_change(_OldVsn, State, _Extra) ->
 %%----------------------------------------------------------------------------
 maybe_start_tracking(Event, State) ->
     maybe
-        {protocol, {'STOMP', _}} ?= lists:keyfind(protocol, 1, Event#event.props),
+        ok ?= verify_stomp_protocol(Event),
         {pid, CPid} ?= lists:keyfind(pid, 1, Event#event.props),
         log_connected(Event#event.props),
         Ref = erlang:monitor(process, CPid),
         maps:put(Ref, Event#event.props, State)
     else
-        {protocol, Protocol} ->
+        {error, Protocol} ->
             rabbit_log:debug("Ignoring connection tracking for a protocol ~p", [Protocol]),
             State;
 
         undefined ->
             rabbit_log:warning("Unable start tracking for the connection ~tp", [Event#event.props]),
             State
+    end.
+
+verify_stomp_protocol(Event) ->
+    case lists:keyfind(protocol, 1, Event#event.props) of
+        {protocol, {Protocol, _}} when Protocol == 'STOMP';
+                                       Protocol == 'Web STOMP' ->
+            ok;
+
+        {protocol, Other} ->
+            {error, Other};
+
+        undefined ->
+            {error, undefined}
     end.
 
 log_connected(Props) ->
