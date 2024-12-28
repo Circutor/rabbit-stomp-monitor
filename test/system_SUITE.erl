@@ -1,10 +1,3 @@
-%% This Source Code Form is subject to the terms of the Mozilla Public
-%% License, v. 2.0. If a copy of the MPL was not distributed with this
-%% file, You can obtain one at https://mozilla.org/MPL/2.0/.
-%%
-%% Copyright (c) 2007-2024 Broadcom. All Rights Reserved. The term “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.  All rights reserved.
-%%
-
 -module(system_SUITE).
 
 -compile(export_all).
@@ -106,12 +99,11 @@ headers_test(Config) ->
     ?assertNotEqual(Timestamp, false),
     ?assert(Timestamp >= NowMs),
 
-    {_, uuid, UUID} = get_single_header(<<"myc-msg-id">>, Msg),
+    {_, longstr, UUID} = get_single_header(<<"myc-msg-id">>, Msg),
     ?assertNotEqual(UUID, false),
-    ?assert(UUID > 0),
 
     Pattern = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
-    ?assertMatch({match, _}, re:run(rabbit_guid:to_string(UUID), Pattern, [unicode])),
+    ?assertMatch({match, _}, re:run(UUID, Pattern, [unicode])),
     ok.
 
 get_single_header(Target,

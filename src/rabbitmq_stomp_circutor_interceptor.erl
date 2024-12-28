@@ -105,7 +105,7 @@ timestamp_header() ->
     {<<"myc-timestamp">>, long, os:system_time(milli_seconds)}.
 
 id_header() ->
-    {<<"myc-msg-id">>, uuid, rabbit_guid:gen()}.
+    {<<"myc-msg-id">>, longstr, rabbit_guid:to_string(rabbit_guid:gen())}.
 
 add_headers(Headers, []) ->
     Headers;
