@@ -9,6 +9,8 @@ dep_rabbit_common = git_rmq-subfolder rabbitmq-common $(RABBITMQ_VERSION)
 dep_rabbit        = git_rmq-subfolder rabbitmq-server $(RABBITMQ_VERSION)
 
 DEPS = rabbit_common rabbit
+TEST_DEPS = rabbitmq_ct_helpers rabbitmq_ct_client_helpers rabbitmq_stomp amqp_client
+
 DEP_EARLY_PLUGINS = rabbit_common/mk/rabbitmq-early-plugin.mk
 DEP_PLUGINS = rabbit_common/mk/rabbitmq-plugin.mk
 
