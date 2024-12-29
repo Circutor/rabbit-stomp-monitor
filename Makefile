@@ -1,5 +1,6 @@
 PROJECT = rabbitmq_stomp_circutor
 PROJECT_DESCRIPTION = RabbitMQ STOMP Circutor plugin
+PROJECT_MOD = rabbitmq_stomp_circutor
 
 RABBITMQ_VERSION ?= v3.12.x
 current_rmq_ref = $(RABBITMQ_VERSION)
@@ -8,8 +9,8 @@ dep_amqp_client   = git_rmq-subfolder rabbitmq-erlang-client $(RABBITMQ_VERSION)
 dep_rabbit_common = git_rmq-subfolder rabbitmq-common $(RABBITMQ_VERSION)
 dep_rabbit        = git_rmq-subfolder rabbitmq-server $(RABBITMQ_VERSION)
 
-DEPS = rabbit_common rabbit
-TEST_DEPS = rabbitmq_ct_helpers rabbitmq_ct_client_helpers rabbitmq_stomp amqp_client
+DEPS = rabbit_common rabbit amqp_client
+TEST_DEPS = rabbitmq_ct_helpers rabbitmq_ct_client_helpers rabbitmq_stomp
 
 DEP_EARLY_PLUGINS = rabbit_common/mk/rabbitmq-early-plugin.mk
 DEP_PLUGINS = rabbit_common/mk/rabbitmq-plugin.mk

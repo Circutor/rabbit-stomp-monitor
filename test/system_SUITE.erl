@@ -15,9 +15,11 @@ all() ->
 
 groups() ->
     [
-      {main, [sequence], [
-                  headers_test
-                 ]}
+     {main, [sequence],
+      [
+       headers_test,
+       forwarding_test
+      ]}
     ].
 
 init_per_suite(Config) ->
@@ -59,16 +61,14 @@ end_per_testcase(TestCase, Config) ->
     Connection = ?config(amqp_connection, Config1),
     Channel = ?config(amqp_channel, Config1),
     Client = ?config(stomp_client, Config1),
+    purge_queues(Channel),
     rabbit_stomp_client:disconnect(Client),
     amqp_channel:close(Channel),
     amqp_connection:close(Connection).
 
-init_per_testcase0(_, Config) ->
-    Config.
-
-end_per_testcase0(_, Config) ->
-    Config.
-
+%% -------------------------------------------------------------------
+%% Testcases
+%% -------------------------------------------------------------------
 headers_test(Config) ->
     Channel = ?config(amqp_channel, Config),
     Client = ?config(stomp_client, Config),
@@ -95,7 +95,39 @@ headers_test(Config) ->
         end,
 
     {_, long, Timestamp} = get_single_header(<<"myc-timestamp">>, Msg),
-    ct:pal("Timestamp: ~p~n", [Timestamp]),
+    ?assertNotEqual(Timestamp, false),
+    ?assert(Timestamp >= NowMs),
+
+    {_, longstr, UUID} = get_single_header(<<"myc-msg-id">>, Msg),
+    ?assertNotEqual(UUID, false),
+
+    Pattern = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+    ?assertMatch({match, _}, re:run(UUID, Pattern, [unicode])),
+    ok.
+
+
+forwarding_test(Config) ->
+    Channel = ?config(amqp_channel, Config),
+    Client = ?config(stomp_client, Config),
+
+    #'basic.consume_ok'{} =
+        amqp_channel:subscribe(Channel, #'basic.consume'{queue  = <<"stomp-messages">>,
+                                                         no_ack = true}, self()),
+
+    NowMs = os:system_time(milli_seconds),
+    rabbit_stomp_client:send(
+      Client, "SEND", [{"destination", ?DESTINATION}], ["hello"]),
+
+    {ok, Msg} =
+        receive
+            {#'basic.deliver'{},
+             M = #'amqp_msg'{payload = <<"hello">>}} ->
+                {ok, M}
+        after 1000 ->
+                {error, timeout}
+        end,
+
+    {_, long, Timestamp} = get_single_header(<<"myc-timestamp">>, Msg),
     ?assertNotEqual(Timestamp, false),
     ?assert(Timestamp >= NowMs),
 
@@ -108,5 +140,11 @@ headers_test(Config) ->
 
 get_single_header(Target,
     #amqp_msg{props = #'P_basic'{headers = Headers}}) ->
-        lists:keyfind(Target, 1, Headers).
+    lists:keyfind(Target, 1, Headers).
 
+purge_queues(Channel) ->
+    [begin
+         #'queue.purge_ok'{} =
+             amqp_channel:call(Channel, #'queue.purge'{queue = Q})
+     end
+     || Q <- [<<"stomp-messages">>]].

@@ -1,7 +1,6 @@
 -module(rabbitmq_stomp_circutor_interceptor).
 
--include_lib("rabbit_common/include/rabbit_framing.hrl").
--include_lib("rabbit_common/include/rabbit.hrl").
+-include_lib("amqp_client/include/amqp_client.hrl").
 
 -behaviour(rabbit_channel_interceptor).
 
@@ -53,6 +52,7 @@ intercept_stomp(Method, Content) ->
     DecodedContent = rabbit_binary_parser:ensure_content_decoded(Content),
     log_message(Method, DecodedContent),
     Content2 = add_headers(Content),
+    forward(Content2),
     {Method, Content2}.
 
 connection_protocol(ChPid) ->
@@ -121,4 +121,11 @@ add_headers(undefined, [Header | Tail]) ->
 add_headers(Headers, [Header | Tail]) ->
     add_headers(lists:keystore(element(1, Header), 1, Headers, Header), Tail).
 
+forward(Content) ->
+    rabbitmq_stomp_circutor_forwarder:publish(
+        amqp_msg(Content)
+    ).
 
+amqp_msg(Content) ->
+    {Props, Payload} = rabbit_basic_common:from_content(Content),
+    #amqp_msg{props = Props, payload = Payload}.
