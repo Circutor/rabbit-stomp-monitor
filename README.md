@@ -31,6 +31,12 @@
     ```
 4. The plugin archive will be created in the `./plugins` directory with the name `rabbitmq_stomp_circutor-<version>.ez`.
 
+### Running Tests
+You can run tests to validate the plugin functionality:
+```bash
+make tests
+```
+
 ## Deployment
 
 ### Using Kubernetes Operator
@@ -62,6 +68,9 @@ It is highly recommended to use a custom image with the plugin pre-installed, ra
 This plugin:
 - Tracks STOMP protocol connections to log user connection and disconnection events.
 - Intercepts and logs messages sent via the STOMP protocol, including details like the exchange, routing key, and payload.
+- Adds the following headers:
+  - `myc-timestamp` - The timestamp of the message on the broker (in milliseconds).
+  - `myc-msg-id` - A unique identifier for the message (UUID).
 
 It consists of two modules:
 
@@ -104,6 +113,7 @@ This module:
 - `maybe_log_message/3`: Logs messages sent via the STOMP protocol.
 - `connection_protocol/1`: Resolves the protocol for a given RabbitMQ channel.
 - `log_message/2`: Logs the payload and metadata of intercepted messages.
+- `add_headers/1`: Adds timestamp and message ID headers to intercepted messages for traceability.
 
 ## Development
 
