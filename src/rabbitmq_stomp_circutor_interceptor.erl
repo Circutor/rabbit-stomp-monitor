@@ -32,10 +32,13 @@ description() ->
     [{description, <<"STOMP Circutor message tracer">>}].
 
 intercept(#'basic.publish'{} = Method, Content, _Context) ->
-    DecodedContent = rabbit_binary_parser:ensure_content_decoded(Content),
-    maybe_log_message(Method, DecodedContent),
-    Content2 = add_headers(Content),
-    {Method, Content2};
+    case connection_protocol(self()) of
+        {Protocol, _} when Protocol == 'STOMP';
+                           Protocol == 'Web STOMP' ->
+            intercept_stomp(Method, Content);
+        _ ->
+            {Method, Content}
+    end;
 
 intercept(Method, Content, _Context) ->
     {Method, Content}.
@@ -46,7 +49,24 @@ applies_to() ->
 %%----------------------------------------------------------------------------
 %% Internal functions
 %%----------------------------------------------------------------------------
+intercept_stomp(Method, Content) ->
+    DecodedContent = rabbit_binary_parser:ensure_content_decoded(Content),
+    log_message(Method, DecodedContent),
+    Content2 = add_headers(Content),
+    {Method, Content2}.
+
 connection_protocol(ChPid) ->
+    case get({?MODULE, connection_protocol}) of
+        undefined ->
+            Protocol = get_connection_protocol(ChPid),
+            put({?MODULE, connection_protocol}, Protocol),
+            Protocol;
+
+        Protocol ->
+            Protocol
+    end.
+
+get_connection_protocol(ChPid) ->
     case ets:lookup(channel_created, ChPid) of
         [] ->
             rabbit_log:error("Unable to find channel info for ~p", [ChPid]),
@@ -75,19 +95,6 @@ connection_protocol(ChPid) ->
                     end
             end
     end.
-
-maybe_log_message(Method, Content) ->
-    maybe_log_message(get({?MODULE, connection_protocol}), Method, Content).
-
-maybe_log_message({Protocol, _}, Method, Content) when Protocol == 'STOMP';
-                                                       Protocol == 'Web STOMP' ->
-    log_message(Method, Content);
-maybe_log_message(undefined, Method, Content) ->
-    Protocol = connection_protocol(self()),
-    put({?MODULE, connection_protocol}, Protocol),
-    maybe_log_message(Protocol, Method, Content);
-maybe_log_message(_Other, _Method, _Content) ->
-    ok.
 
 log_message(#'basic.publish'{exchange = X, routing_key = RK}, Content) ->
     {_Props, Payload} = rabbit_basic_common:from_content(Content),
