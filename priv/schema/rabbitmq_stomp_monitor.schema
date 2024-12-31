@@ -1,0 +1,14 @@
+{mapping, "stomp_monitor.queue", "rabbitmq_stomp_monitor.queue", [
+    {datatype, string},
+    {default, "stomp-messages"}
+]}.
+
+{translation, "rabbitmq_stomp_monitor.queue",
+fun(Conf) ->
+    Queue = cuttlefish:conf_get("stomp_monitor.queue", Conf),
+    list_to_binary(Queue)
+end}.
+
+%% Local Variables:
+%% mode: erlang
+%% End:

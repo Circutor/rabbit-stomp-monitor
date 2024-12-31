@@ -63,6 +63,19 @@ It is highly recommended to use a custom image with the plugin pre-installed, ra
        - rabbitmq_stomp_monitor
    ```
    Refer to the [documentation](https://www.rabbitmq.com/kubernetes/operator/using-operator#images) for setting up access to private registries via `imagePullSecrets` if necessary.
+4. Optionally, one can configure the destination queue for intercepted messages by setting the `stomp_monitor.queue` configuration key in the RabbitMQ configuration:
+   ```yaml
+   apiVersion: rabbitmq.com/v1beta1
+   kind: RabbitmqCluster
+   metadata:
+     name: rabbitmq
+   spec:
+     rabbitmq:
+       additionalPlugins:
+         - rabbitmq_stomp_monitor
+       additionalConfig: |
+         stomp_monitor.queue = my-queue
+   ```
 
 ## Overall Functionality
 This plugin:
@@ -71,11 +84,13 @@ This plugin:
 - Adds the following headers:
   - `myc-timestamp` - The timestamp of the message on the broker (in milliseconds).
   - `myc-msg-id` - A unique identifier for the message (UUID).
+- Forwards intercepted messages to a queue (`stomp-messages` by default) for further processing.
 
-It consists of two modules:
+It consists of three main modules:
 
 1. `rabbitmq_stomp_monitor_event.erl`
 2. `rabbitmq_stomp_monitor_interceptor.erl`
+3. `rabbitmq_stomp_monitor_forwarder.erl`
 
 ### `rabbitmq_stomp_monitor_event`
 This module:
@@ -108,13 +123,25 @@ This module:
 - **Message Logging**:
    - Checks if the channel uses the STOMP protocol.
    - Logs the exchange, routing key, and payload of the message.
+- **Message Forwarding**:
+   - Publishes intercepted messages to a configured queue for further processing (`stomp-messages` by default).
 
 **Core Functions**:
 - `maybe_log_message/3`: Logs messages sent via the STOMP protocol.
 - `connection_protocol/1`: Resolves the protocol for a given RabbitMQ channel.
 - `log_message/2`: Logs the payload and metadata of intercepted messages.
 - `add_headers/1`: Adds timestamp and message ID headers to intercepted messages for traceability.
+- `forward/1`: Forwards intercepted messages to the queue.
+
+### `rabbitmq_stomp_monitor_forwarder`
+This module:
+- Manages the forwarding of intercepted STOMP messages to a dedicated queue for further processing.
+
+**Key Details**:
+- **API**:
+   - `publish/1`: Publishes a message to a configured queue.
+- **Initialization**:
+   - Establishes an AMQP connection and declares the destination queue during startup.
 
 ## Development
-
 Refer to the official RabbitMQ [plugin development guide](https://www.rabbitmq.com/plugin-development) to understand how the plugin system works.
