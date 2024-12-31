@@ -1,5 +1,4 @@
 -module(rabbitmq_stomp_monitor_event).
--feature(maybe_expr, enable).
 
 -include_lib("rabbit_common/include/rabbit.hrl").
 
@@ -60,19 +59,19 @@ code_change(_OldVsn, State, _Extra) ->
 %% Internal functions
 %%----------------------------------------------------------------------------
 maybe_start_tracking(Event, State) ->
-    maybe
-        ok ?= verify_stomp_protocol(Event),
-        {pid, CPid} ?= lists:keyfind(pid, 1, Event#event.props),
-        log_connected(Event#event.props),
-        Ref = erlang:monitor(process, CPid),
-        maps:put(Ref, Event#event.props, State)
-    else
+    case verify_stomp_protocol(Event) of
+        ok ->
+            case lists:keyfind(pid, 1, Event#event.props) of
+                {pid, CPid} ->
+                    log_connected(Event#event.props),
+                    Ref = erlang:monitor(process, CPid),
+                    maps:put(Ref, Event#event.props, State);
+                undefined ->
+                    rabbit_log:warning("Unable start tracking for the connection ~tp", [Event#event.props]),
+                    State
+            end;
         {error, Protocol} ->
             rabbit_log:debug("Ignoring connection tracking for a protocol ~p", [Protocol]),
-            State;
-
-        undefined ->
-            rabbit_log:warning("Unable start tracking for the connection ~tp", [Event#event.props]),
             State
     end.
 
