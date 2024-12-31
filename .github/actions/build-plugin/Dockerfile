@@ -1,4 +1,4 @@
-FROM elixir:1.16-otp-26
+FROM elixir:1.16-otp-25
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends rsync zip && \

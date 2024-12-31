@@ -3,7 +3,7 @@
 ## Build
 
 ### Prerequisites
-- [Erlang/OTP 26](https://www.erlang.org/doc/system/install.html)
+- [Erlang/OTP 25](https://www.erlang.org/doc/system/install.html)
 - [Elixir 1.16](https://elixir-lang.org/install.html) (required for `rabbitmq-server` CLI tools)
 - Make (>= 4.0) (via `build-essential` on Debian-based systems or `brew install make` on macOS)
 
