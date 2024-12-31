@@ -1,5 +1,5 @@
 name: 'Build RabbitMQ plugin'
-description: 'Build plugin as rabbitmq_stomp_circutor-*.ez artifact'
+description: 'Build plugin as rabbitmq_stomp_monitor-*.ez artifact'
 runs:
   using: 'docker'
   image: 'Dockerfile'

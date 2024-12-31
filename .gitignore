@@ -14,4 +14,4 @@
 /sbin/
 /sbin.lock
 
-/rabbitmq_stomp_circutor.d
+/rabbitmq_stomp_monitor.d

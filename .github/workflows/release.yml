@@ -35,7 +35,7 @@ jobs:
           const fs = require('fs');
           const plugin = fs
               .readdirSync('plugins')
-              .find(file => file.match(/rabbitmq_stomp_circutor-.*\.ez/));
+              .find(file => file.match(/rabbitmq_stomp_monitor-.*\.ez/));
 
           await github.rest.repos.uploadReleaseAsset({
             owner: repo_owner,
