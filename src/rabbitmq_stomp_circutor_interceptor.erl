@@ -1,6 +1,7 @@
 -module(rabbitmq_stomp_circutor_interceptor).
 
 -include_lib("rabbit_common/include/rabbit_framing.hrl").
+-include_lib("rabbit_common/include/rabbit.hrl").
 
 -behaviour(rabbit_channel_interceptor).
 
@@ -31,8 +32,13 @@ description() ->
     [{description, <<"STOMP Circutor message tracer">>}].
 
 intercept(#'basic.publish'{} = Method, Content, _Context) ->
-    maybe_log_message(Method, Content),
-    {Method, Content};
+    case connection_protocol(self()) of
+        {Protocol, _} when Protocol == 'STOMP';
+                           Protocol == 'Web STOMP' ->
+            intercept_stomp(Method, Content);
+        _ ->
+            {Method, Content}
+    end;
 
 intercept(Method, Content, _Context) ->
     {Method, Content}.
@@ -43,7 +49,24 @@ applies_to() ->
 %%----------------------------------------------------------------------------
 %% Internal functions
 %%----------------------------------------------------------------------------
+intercept_stomp(Method, Content) ->
+    DecodedContent = rabbit_binary_parser:ensure_content_decoded(Content),
+    log_message(Method, DecodedContent),
+    Content2 = add_headers(Content),
+    {Method, Content2}.
+
 connection_protocol(ChPid) ->
+    case get({?MODULE, connection_protocol}) of
+        undefined ->
+            Protocol = get_connection_protocol(ChPid),
+            put({?MODULE, connection_protocol}, Protocol),
+            Protocol;
+
+        Protocol ->
+            Protocol
+    end.
+
+get_connection_protocol(ChPid) ->
     case ets:lookup(channel_created, ChPid) of
         [] ->
             rabbit_log:error("Unable to find channel info for ~p", [ChPid]),
@@ -73,20 +96,29 @@ connection_protocol(ChPid) ->
             end
     end.
 
-maybe_log_message(Method, Content) ->
-    maybe_log_message(get({?MODULE, connection_protocol}), Method, Content).
-
-maybe_log_message({Protocol, _}, Method, Content) when Protocol == 'STOMP';
-                                                       Protocol == 'Web STOMP' ->
-    log_message(Method, Content);
-maybe_log_message(undefined, Method, Content) ->
-    Protocol = connection_protocol(self()),
-    put({?MODULE, connection_protocol}, Protocol),
-    maybe_log_message(Protocol, Method, Content);
-maybe_log_message(_Other, _Method, _Content) ->
-    ok.
-
 log_message(#'basic.publish'{exchange = X, routing_key = RK}, Content) ->
     {_Props, Payload} = rabbit_basic_common:from_content(Content),
     rabbit_log:info("Received STOMP message for ~s exchange and ~s routing key: ~tp",
                     [X, RK, Payload]).
+
+add_headers(#content{properties = #'P_basic'{headers = Headers0} = Props0} = Content) ->
+    TSHeader = timestamp_header(),
+    IDHeader = id_header(),
+    Headers1 = add_headers(Headers0, [TSHeader, IDHeader]),
+    Props1 = Props0#'P_basic'{headers = Headers1},
+    Content#content{properties = Props1, properties_bin = none}.
+
+timestamp_header() ->
+    {<<"myc-timestamp">>, long, os:system_time(milli_seconds)}.
+
+id_header() ->
+    {<<"myc-msg-id">>, longstr, rabbit_guid:to_string(rabbit_guid:gen())}.
+
+add_headers(Headers, []) ->
+    Headers;
+add_headers(undefined, [Header | Tail]) ->
+    add_headers([Header], Tail);
+add_headers(Headers, [Header | Tail]) ->
+    add_headers(lists:keystore(element(1, Header), 1, Headers, Header), Tail).
+
+
