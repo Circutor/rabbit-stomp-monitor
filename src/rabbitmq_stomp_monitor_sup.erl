@@ -1,4 +1,4 @@
--module(rabbitmq_stomp_circutor_sup).
+-module(rabbitmq_stomp_monitor_sup).
 
 -behaviour(supervisor).
 
@@ -51,12 +51,12 @@ init([]) ->
 
     Children = [
                 #{
-                  id => rabbitmq_stomp_circutor_forwarder,
-                  start => {rabbitmq_stomp_circutor_forwarder, start_link, []},
+                  id => rabbitmq_stomp_monitor_forwarder,
+                  start => {rabbitmq_stomp_monitor_forwarder, start_link, []},
                   restart => permanent,
                   shutdown => 5000,
                   type => worker,
-                  modules => [rabbitmq_stomp_circutor_forwarder]}
+                  modules => [rabbitmq_stomp_monitor_forwarder]}
                ],
 
     {ok, {SupFlags, Children}}.

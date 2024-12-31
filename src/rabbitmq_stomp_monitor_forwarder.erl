@@ -1,4 +1,4 @@
--module(rabbitmq_stomp_circutor_forwarder).
+-module(rabbitmq_stomp_monitor_forwarder).
 
 -behaviour(gen_server).
 
@@ -54,7 +54,7 @@ init([]) ->
     process_flag(trap_exit, true),
     {ok, Connection} = amqp_connection:start(#amqp_params_direct{}),
     {ok, Channel} = amqp_connection:open_channel(Connection),
-    {ok, QueueName} = application:get_env(rabbitmq_stomp_circutor, queue),
+    {ok, QueueName} = application:get_env(rabbitmq_stomp_monitor, queue),
     #'queue.declare_ok'{}
         = amqp_channel:call(Channel,
                             #'queue.declare'{

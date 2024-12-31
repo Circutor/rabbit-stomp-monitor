@@ -1,4 +1,4 @@
--module(rabbitmq_stomp_circutor_event).
+-module(rabbitmq_stomp_monitor_event).
 -feature(maybe_expr, enable).
 
 -include_lib("rabbit_common/include/rabbit.hrl").
@@ -11,7 +11,7 @@
 -import(rabbit_misc, [pget/2]).
 
 -rabbit_boot_step({?MODULE,
-                   [{description, "RabbitMQ STOMP Circutor connection tracker"},
+                   [{description, "RabbitMQ STOMP connection tracker"},
                     {mfa,         {gen_event, add_handler,
                                    [rabbit_event, ?MODULE, []]}},
                     {cleanup,     {gen_event, delete_handler,

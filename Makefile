@@ -1,6 +1,6 @@
-PROJECT = rabbitmq_stomp_circutor
-PROJECT_DESCRIPTION = RabbitMQ STOMP Circutor plugin
-PROJECT_MOD = rabbitmq_stomp_circutor
+PROJECT = rabbitmq_stomp_monitor
+PROJECT_DESCRIPTION = RabbitMQ STOMP Monitor plugin
+PROJECT_MOD = rabbitmq_stomp_monitor
 
 RABBITMQ_VERSION ?= v3.12.x
 current_rmq_ref = $(RABBITMQ_VERSION)
