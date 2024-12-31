@@ -1,4 +1,4 @@
--module(rabbitmq_stomp_circutor_interceptor).
+-module(rabbitmq_stomp_monitor_interceptor).
 
 -include_lib("rabbit_common/include/rabbit_framing.hrl").
 -include_lib("rabbit_common/include/rabbit.hrl").
@@ -10,13 +10,13 @@
 -import(rabbit_misc, [pget/2]).
 
 -rabbit_boot_step({?MODULE,
-                   [{description, "STOMP Circutor message tracer"},
+                   [{description, "STOMP message tracer"},
                     {mfa, {rabbit_registry, register,
                            [channel_interceptor,
-                            <<"STOMP Circutor message tracer">>, ?MODULE]}},
+                            <<"STOMP message tracer">>, ?MODULE]}},
                     {cleanup, {rabbit_registry, unregister,
                                [channel_interceptor,
-                                <<"STOMP Circutor message tracer">>]}},
+                                <<"STOMP message tracer">>]}},
                     {requires, rabbit_registry},
                     {enables, recovery}]}).
 
@@ -29,7 +29,7 @@ init(_Ch) ->
 
 
 description() ->
-    [{description, <<"STOMP Circutor message tracer">>}].
+    [{description, <<"STOMP message tracer">>}].
 
 intercept(#'basic.publish'{} = Method, Content, _Context) ->
     case connection_protocol(self()) of

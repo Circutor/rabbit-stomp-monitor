@@ -1,4 +1,4 @@
-# RabbitMQ STOMP Circutor Plugin
+# RabbitMQ STOMP Monitor Plugin
 
 ## Build
 
@@ -14,7 +14,7 @@
     ```bash
     DIST_AS_EZS=yes make dist
     ```
-3. The plugin archive will be created in the `./plugins` directory with the name `rabbitmq_stomp_circutor-<version>.ez`.
+3. The plugin archive will be created in the `./plugins` directory with the name `rabbitmq_stomp_monitor-<version>.ez`.
 
 #### Building Using GitHub Actions Dockerfile
 1. Ensure Docker is installed and running on your machine.
@@ -29,7 +29,7 @@
     ```bash
     docker run --rm -v $(pwd):/github/workspace build-plugin
     ```
-4. The plugin archive will be created in the `./plugins` directory with the name `rabbitmq_stomp_circutor-<version>.ez`.
+4. The plugin archive will be created in the `./plugins` directory with the name `rabbitmq_stomp_monitor-<version>.ez`.
 
 ### Running Tests
 You can run tests to validate the plugin functionality:
@@ -48,7 +48,7 @@ It is highly recommended to use a custom image with the plugin pre-installed, ra
     ```Dockerfile
     FROM docker.io/bitnami/rabbitmq:<version> # Or any other RabbitMQ image you'd like to extend
 
-    COPY plugins/rabbitmq_stomp_circutor-<version>.ez /opt/bitnami/rabbitmq/plugins/
+    COPY plugins/rabbitmq_stomp_monitor-<version>.ez /opt/bitnami/rabbitmq/plugins/
     ```
 3. Use the custom image in your Kubernetes deployment configuration with the plugin enabled:
    ```yaml
@@ -60,7 +60,7 @@ It is highly recommended to use a custom image with the plugin pre-installed, ra
      image: <IMAGE>                # The custom RabbitMQ image to use
      rabbitmq:
        additionalPlugins:
-       - rabbitmq_stomp_circutor
+       - rabbitmq_stomp_monitor
    ```
    Refer to the [documentation](https://www.rabbitmq.com/kubernetes/operator/using-operator#images) for setting up access to private registries via `imagePullSecrets` if necessary.
 
@@ -74,10 +74,10 @@ This plugin:
 
 It consists of two modules:
 
-1. `rabbitmq_stomp_circutor_event.erl`
-2. `rabbitmq_stomp_circutor_interceptor.erl`
+1. `rabbitmq_stomp_monitor_event.erl`
+2. `rabbitmq_stomp_monitor_interceptor.erl`
 
-### `rabbitmq_stomp_circutor_event`
+### `rabbitmq_stomp_monitor_event`
 This module:
 - Listens for `connection_created` events in RabbitMQ.
 - Tracks STOMP protocol-based connections for logging purposes.
@@ -96,7 +96,7 @@ This module:
 - `log_connected/1` and `log_disconnected/1`: Log connection and disconnection events, including user and vhost information.
 - `log_activity/2`: Formats and logs user connection activities.
 
-### `rabbitmq_stomp_circutor_interceptor`
+### `rabbitmq_stomp_monitor_interceptor`
 This module:
 - Intercepts `basic.publish` messages and logs their details when they are associated with the STOMP protocol.
 - Targets messages published through RabbitMQ's channel interceptors.
